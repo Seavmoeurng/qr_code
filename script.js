@@ -1,8 +1,22 @@
+// let currentSettings = {
+//     text: "", // Empty initial state
+//     bodyShape: "square",
+//     eyeExtShape: "square",
+//     eyeIntShape: "square",
+//     errorCorrection: "H",
+//     colorMode: "single",
+//     color1: "#000000",
+//     color2: "#8a2be2",
+//     bgColor: "#ffffff",
+//     logoUrl: "",
+//     logoSize: 0.4,
+//     hideBgDots: true
+// };
 let currentSettings = {
-    text: "", // Empty initial state
-    bodyShape: "square",
-    eyeExtShape: "square",
-    eyeIntShape: "square",
+    text: "", 
+    bodyShape: "dots",            // Changed from "square"
+    eyeExtShape: "extra-rounded", // Changed from "square"
+    eyeIntShape: "square",        // Keep as "square"
     errorCorrection: "H",
     colorMode: "single",
     color1: "#000000",
