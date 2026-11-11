@@ -3,123 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced QR Code Maker</title>
+    <title>Perfect Vector QR Code Maker</title>
     <link rel="stylesheet" href="style.css">
-    <!-- QR Code Styling Library -->
-    <!-- <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script> -->
-     <!-- Replace your current script tag with this updated version -->
-<script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.6.0-rc.1/lib/qr-code-styling.js"></script>
+    <!-- Restored the original, powerful library (v1.6.0 for perfect SVG quality) -->
+    <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.6.0-rc.1/lib/qr-code-styling.js"></script>
+    <script>window.QRCodeStyling || document.write('<script src="qr-code-styling.js"><\/script>')</script>
 </head>
 <body>
     <div class="app-wrapper">
-        <!-- Left: Editor Panel -->
         <div class="editor-panel">
             <div class="input-group">
                 <textarea id="qr-text" placeholder="Enter URL or Text here..." rows="2"></textarea>
             </div>
 
-            <!-- Main Tabs -->
             <div class="main-tabs">
                 <button class="tab-btn active" data-tab="shapes">Shapes</button>
                 <button class="tab-btn" data-tab="colors">Colors</button>
                 <button class="tab-btn" data-tab="logo">Logo</button>
             </div>
 
-            <!-- Shapes Tab Content -->
             <div class="tab-content active" id="content-shapes">
                 <div class="sub-tabs">
                     <button class="sub-tab-btn active" data-sub="body">Body</button>
                     <button class="sub-tab-btn" data-sub="eye-ext">External Eye</button>
                     <button class="sub-tab-btn" data-sub="eye-int">Internal Eye</button>
-                    <button class="sub-tab-btn" data-sub="scannability">Scannability Level</button>
+                    <button class="sub-tab-btn" data-sub="scannability">Scannability</button>
                 </div>
 
-                <!-- Body Shapes
-                <div class="shape-panel active" id="panel-body">
-                    <div class="shape-grid">
-                        <div class="shape-card active" data-type="body" data-val="square">Square</div>
-                        <div class="shape-card" data-type="body" data-val="dots">Dots</div>
-                        <div class="shape-card" data-type="body" data-val="rounded">Rounded</div>
-                        <div class="shape-card" data-type="body" data-val="extra-rounded">Extra Rounded</div>
-                        <div class="shape-card" data-type="body" data-val="classy">Classy</div>
-                    </div>
-                </div> -->
-                
-
-                <!-- External Eye
-                <div class="shape-panel" id="panel-eye-ext">
-                    <div class="shape-grid">
-                        <div class="shape-card active" data-type="eye-ext" data-val="square">Square</div>
-                        <div class="shape-card" data-type="eye-ext" data-val="dot">Dot</div>
-                        <div class="shape-card" data-type="eye-ext" data-val="extra-rounded">Extra Rounded</div>
-                    </div>
-                </div> -->
-                <!-- Body Shapes -->
                 <div class="shape-panel active" id="panel-body">
                     <div class="shape-grid">
                         <div class="shape-card" data-type="body" data-val="square">Square</div>
-                        <!-- Add "active" to Dots -->
-                        <div class="shape-card active" data-type="body" data-val="dots">Dots</div>
+                        <div class="shape-card" data-type="body" data-val="dots">Dots</div>
                         <div class="shape-card" data-type="body" data-val="rounded">Rounded</div>
                         <div class="shape-card" data-type="body" data-val="extra-rounded">Extra Rounded</div>
-                        <div class="shape-card" data-type="body" data-val="classy">Classy</div>
+                        <!-- Classy is restored and works perfectly! -->
+                        <div class="shape-card active" data-type="body" data-val="classy">Classy</div>
                     </div>
                 </div>
 
-                <!-- External Eye -->
                 <div class="shape-panel" id="panel-eye-ext">
                     <div class="shape-grid">
                         <div class="shape-card" data-type="eye-ext" data-val="square">Square</div>
                         <div class="shape-card" data-type="eye-ext" data-val="dot">Dot</div>
-                        <!-- Add "active" to Extra Rounded -->
                         <div class="shape-card active" data-type="eye-ext" data-val="extra-rounded">Extra Rounded</div>
                     </div>
                 </div>
 
-                <!-- Internal Eye -->
                 <div class="shape-panel" id="panel-eye-int">
                     <div class="shape-grid">
-                        <div class="shape-card active" data-type="eye-int" data-val="square">Square</div>
-                        <div class="shape-card" data-type="eye-int" data-val="dot">Dot (Circle)</div>
-                        <div class="shape-card" data-type="eye-int" data-val="extra-rounded">Extra Rounded</div>
+                        <div class="shape-card" data-type="eye-int" data-val="square">Square</div>
+                        <div class="shape-card" data-type="eye-int" data-val="dot">Dot</div>
+                        <!-- Extra Rounded Internal Eye is now powered by our custom DOM hack -->
+                        <div class="shape-card active" data-type="eye-int" data-val="extra-rounded">Extra Rounded</div>
                     </div>
                 </div>
 
-                <!-- Scannability Level -->
                 <div class="shape-panel" id="panel-scannability">
                     <div class="scannability-grid">
                         <div class="scan-card active" data-val="H">
                             <div class="scan-title">Best</div>
-                            <div class="scan-desc">Maximum damage-resistant pattern</div>
+                            <div class="scan-desc">Maximum damage resistance</div>
                         </div>
                         <div class="scan-card" data-val="Q">
                             <div class="scan-title">High</div>
-                            <div class="scan-desc">Optimal damage-resistant pattern</div>
+                            <div class="scan-desc">Optimal damage resistance</div>
                         </div>
                         <div class="scan-card" data-val="M">
                             <div class="scan-title">Medium</div>
-                            <div class="scan-desc">Balanced cluttered-looking pattern</div>
+                            <div class="scan-desc">Balanced pattern</div>
                         </div>
                         <div class="scan-card" data-val="L">
                             <div class="scan-title">Smallest</div>
-                            <div class="scan-desc">Less cluttered-looking pattern</div>
+                            <div class="scan-desc">Less cluttered pattern</div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Colors Tab Content -->
             <div class="tab-content" id="content-colors">
-                <!-- Modern Segmented Control -->
                 <div class="segmented-control">
                     <input type="radio" id="mode-single" name="color-mode" value="single" checked>
                     <label for="mode-single">Single Color</label>
-                    
                     <input type="radio" id="mode-gradient" name="color-mode" value="gradient">
                     <label for="mode-gradient">Color Gradient</label>
                 </div>
-                
-                <!-- Modern Color Cards -->
                 <div class="color-cards-container">
                     <div class="color-card">
                         <label>Pattern Color 1</label>
@@ -128,7 +95,6 @@
                             <span class="color-hex" id="hex-dark-1">#000000</span>
                         </div>
                     </div>
-                    
                     <div class="color-card" id="gradient-color-group" style="display: none;">
                         <label>Pattern Color 2</label>
                         <div class="color-picker-wrapper">
@@ -136,7 +102,6 @@
                             <span class="color-hex" id="hex-dark-2">#8A2BE2</span>
                         </div>
                     </div>
-
                     <div class="color-card">
                         <label>Background Color</label>
                         <div class="color-picker-wrapper">
@@ -147,49 +112,34 @@
                 </div>
             </div>
 
-            <!-- Logo Tab Content -->
             <div class="tab-content" id="content-logo">
                 <div class="custom-file-upload" id="upload-box" onclick="document.getElementById('logo-input').click()">
                     <input type="file" id="logo-input" accept="image/png, image/jpeg, image/svg+xml" style="display:none;">
-                    <span id="upload-text">Upload Custom Logo (PNG, JPEG)</span>
+                    <span id="upload-text">Upload Custom Logo</span>
                     <button id="remove-logo" class="hidden-btn">✖</button>
                 </div>
-
                 <div class="logo-controls">
                     <div class="slider-group">
                         <label>Logo Size</label>
-                        <input type="range" id="logo-size" min="0.1" max="0.6" step="0.05" value="0.4">
+                        <input type="range" id="logo-size" min="0.1" max="0.5" step="0.05" value="0.3">
                     </div>
                     <div class="toggle-group">
                         <label class="switch">
                             <input type="checkbox" id="logo-bg-toggle" checked>
                             <span class="slider round"></span>
                         </label>
-                        <span>Logo Background</span>
+                        <span>Clear Background Behind Logo</span>
                     </div>
-                </div>
-
-                <div class="social-logos">
-                    <button class="social-btn" data-url="https://upload.wikimedia.org/wikipedia/commons/0/09/YouTube_full-color_icon_%282017%29.svg">YT</button>
-                    <button class="social-btn" data-url="https://upload.wikimedia.org/wikipedia/commons/b/b8/2021_Facebook_icon.svg">FB</button>
-                    <button class="social-btn" data-url="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg">WA</button>
-                    <button class="social-btn" data-url="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg">TG</button>
                 </div>
             </div>
         </div>
 
-        <!-- Right: Preview & Download Panel -->
         <div class="preview-panel">
             <div class="preview-box">
-                <!-- Placeholder shown when input is empty -->
                 <div id="qr-placeholder">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ddd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 10px;">
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                        <path d="M8 12h8"></path>
-                    </svg>
                     <p>Paste a link or text to generate preview</p>
                 </div>
-                <!-- The actual QR code container -->
+                <!-- The crisp vector SVG is drawn inside here -->
                 <div id="qr-result" style="display: none;"></div>
             </div>
             
@@ -211,8 +161,16 @@
                             <option value="2000">2000x2000 px</option>
                         </select>
                     </div>
+                    <div class="input-col">
+                        <label>Margin</label>
+                        <select id="dl-margin">
+                            <option value="0" selected>Edge-to-Edge (0)</option>
+                            <option value="5">Small (5px)</option>
+                            <option value="15">Medium (15px)</option>
+                            <option value="25">Large (25px)</option>
+                        </select>
+                    </div>
                 </div>
-                <!-- Disabled by default until text is entered -->
                 <button id="download-btn" disabled>Download QR CODE</button>
             </div>
         </div>

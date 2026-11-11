@@ -1,76 +1,138 @@
-// let currentSettings = {
-//     text: "", // Empty initial state
-//     bodyShape: "square",
-//     eyeExtShape: "square",
-//     eyeIntShape: "square",
-//     errorCorrection: "H",
-//     colorMode: "single",
-//     color1: "#000000",
-//     color2: "#8a2be2",
-//     bgColor: "#ffffff",
-//     logoUrl: "",
-//     logoSize: 0.4,
-//     hideBgDots: true
-// };
 let currentSettings = {
     text: "", 
-    bodyShape: "dots",            // Changed from "square"
-    eyeExtShape: "extra-rounded", // Changed from "square"
-    eyeIntShape: "square",        // Keep as "square"
+    bodyShape: "classy", 
+    eyeExtShape: "extra-rounded",
+    eyeIntShape: "extra-rounded",
     errorCorrection: "H",
     colorMode: "single",
     color1: "#000000",
     color2: "#8a2be2",
     bgColor: "#ffffff",
     logoUrl: "",
-    logoSize: 0.4,
-    hideBgDots: true
+    logoSize: 0.3,
+    hideBgDots: true,
+    margin: 0 // Default: 0 for full edge-to-edge bleed
+    margin: 5 // Default 5px margin
 };
 
 const qrResult = document.getElementById('qr-result');
 const qrPlaceholder = document.getElementById('qr-placeholder');
 const downloadBtn = document.getElementById('download-btn');
 
-// Initialize with type: "svg" to fix rendering glitch
+// Force SVG rendering for infinite vector crispness
 const qrCode = new QRCodeStyling({
-    width: 250, height: 250, margin: 10, type: "svg"
+    width: 250, height: 250, margin: 0, type: "svg"
 });
 qrCode.append(qrResult);
 
+// --- Apply Smooth Extra-Rounded Corners to Internal Eyes ---
+function applyExtraRoundedInnerEye(targetSvg) {
+    const svg = targetSvg || document.querySelector('#qr-result svg');
+    if (!svg) return;
+    
+    if (currentSettings.eyeIntShape === 'extra-rounded') {
+        const dotRects = svg.querySelectorAll('clipPath[id*="corners-dot"] rect, rect[clip-path*="corners-dot"]');
+        dotRects.forEach(rect => {
+            const w = parseFloat(rect.getAttribute('width') || '0');
+            const h = parseFloat(rect.getAttribute('height') || '0');
+            const size = Math.max(w, h);
+            if (size > 0) {
+                const r = (size * 0.35).toFixed(2); // 35% radius creates the ideal curved corner look
+                rect.setAttribute('rx', r);
+                rect.setAttribute('ry', r);
+            }
+        });
+    }
+}
+
+// --- Fit SVG ViewBox Tight to QR Bounds (Stretches edge-to-edge) ---
+// --- Fit SVG ViewBox Tight to QR Bounds (with neat 5px margin) ---
+function fitSvgViewBox(targetSvg) {
+    const svg = targetSvg || document.querySelector('#qr-result svg');
+    if (!svg || !qrCode._qr) return;
+    
+    const n = qrCode._qr.getModuleCount();
+    const a = Math.floor(250 / n);
+    const matrixSize = n * a;
+    const offset = Math.floor((250 - matrixSize) / 2);
+    const m = currentSettings.margin; // 5px default
+    
+    if (currentSettings.margin === 0) {
+        // Tight-fit viewBox directly to the QR pattern bounds so it stretches 100% to the edges
+        svg.setAttribute('viewBox', `${offset} ${offset} ${matrixSize} ${matrixSize}`);
+    } else {
+        const m = currentSettings.margin;
+        svg.setAttribute('viewBox', `${offset - m} ${offset - m} ${matrixSize + 2 * m} ${matrixSize + 2 * m}`);
+    }
+    svg.setAttribute('viewBox', `${offset - m} ${offset - m} ${matrixSize + 2 * m} ${matrixSize + 2 * m}`);
+}
+
+// Hook into the library's native lifecycle extension to guarantee execution
+qrCode.applyExtension((svg) => {
+    applyExtraRoundedInnerEye(svg);
+    fitSvgViewBox(svg);
+});
+
 function updateLivePreview() {
-    // 1. Handle Empty State
     if (!currentSettings.text) {
         qrResult.style.display = 'none';
         qrPlaceholder.style.display = 'block';
         downloadBtn.disabled = true;
-        return; 
+        return;
     }
-
-    // 2. Setup for Display
     qrResult.style.display = 'flex';
     qrPlaceholder.style.display = 'none';
     downloadBtn.disabled = false;
 
-    // 3. Configure Appearance
+    // Setup colors & gradients
     let dotsOptions = { type: currentSettings.bodyShape };
+    let cornerSquareGradient = null;
+    let cornerDotGradient = null;
+
     if (currentSettings.colorMode === "gradient") {
-        dotsOptions.gradient = {
-            type: "linear", rotation: Math.PI / 4,
-            colorStops: [{ offset: 0, color: currentSettings.color1 }, { offset: 1, color: currentSettings.color2 }]
+        const gradientConfig = {
+            type: "linear",
+            rotation: Math.PI / 4,
+            colorStops: [
+                { offset: 0, color: currentSettings.color1 },
+                { offset: 1, color: currentSettings.color2 }
+            ]
         };
+        dotsOptions.gradient = gradientConfig;
+        cornerSquareGradient = gradientConfig;
+        cornerDotGradient = gradientConfig;
     } else {
         dotsOptions.color = currentSettings.color1;
     }
 
-    // 4. Trigger Library Update
+    // Handle our 'extra-rounded' state
+    let dotType = currentSettings.eyeIntShape;
+    if (dotType === 'extra-rounded') {
+        dotType = 'square'; // Force standard squares so the extension curves them via rx/ry
+    }
+
+    const cornersSquareOptions = {
+        type: currentSettings.eyeExtShape,
+        color: currentSettings.colorMode === 'single' ? currentSettings.color1 : undefined,
+        gradient: cornerSquareGradient || undefined
+    };
+
+    const cornersDotOptions = {
+        type: dotType,
+        color: currentSettings.colorMode === 'single' ? currentSettings.color1 : undefined,
+        gradient: cornerDotGradient || undefined
+    };
+
+    // Generate/update the standard QR code
     qrCode.update({
         data: currentSettings.text,
-        image: currentSettings.logoUrl,
+        margin: 0, // Managed via viewBox for precise pixel-level edge stretching
+        image: currentSettings.logoUrl || undefined,
         qrOptions: { errorCorrectionLevel: currentSettings.errorCorrection },
         dotsOptions: dotsOptions,
         backgroundOptions: { color: currentSettings.bgColor },
-        cornersSquareOptions: { type: currentSettings.eyeExtShape, color: currentSettings.color1 },
-        cornersDotOptions: { type: currentSettings.eyeIntShape, color: currentSettings.color1 },
+        cornersSquareOptions: cornersSquareOptions,
+        cornersDotOptions: cornersDotOptions,
         imageOptions: {
             crossOrigin: "anonymous",
             margin: 5,
@@ -78,10 +140,15 @@ function updateLivePreview() {
             hideBackgroundDots: currentSettings.hideBgDots
         }
     });
-}
-updateLivePreview(); // Run once to set initial empty state
 
-// --- Events: Text & Colors ---
+    // Immediate fallback execution
+    applyExtraRoundedInnerEye();
+    fitSvgViewBox();
+}
+
+updateLivePreview(); 
+
+// --- Event Listeners (Inputs & Colors) ---
 document.getElementById('qr-text').addEventListener('input', (e) => { 
     currentSettings.text = e.target.value.trim(); 
     updateLivePreview(); 
@@ -89,17 +156,19 @@ document.getElementById('qr-text').addEventListener('input', (e) => {
 
 document.getElementById('color-dark-1').addEventListener('input', (e) => { 
     currentSettings.color1 = e.target.value; 
-    document.getElementById('hex-dark-1').innerText = e.target.value.toUpperCase();
+    document.getElementById('hex-dark-1').innerText = e.target.value.toUpperCase(); 
     updateLivePreview(); 
 });
+
 document.getElementById('color-dark-2').addEventListener('input', (e) => { 
     currentSettings.color2 = e.target.value; 
-    document.getElementById('hex-dark-2').innerText = e.target.value.toUpperCase();
+    document.getElementById('hex-dark-2').innerText = e.target.value.toUpperCase(); 
     updateLivePreview(); 
 });
+
 document.getElementById('color-light').addEventListener('input', (e) => { 
     currentSettings.bgColor = e.target.value; 
-    document.getElementById('hex-light').innerText = e.target.value.toUpperCase();
+    document.getElementById('hex-light').innerText = e.target.value.toUpperCase(); 
     updateLivePreview(); 
 });
 
@@ -111,11 +180,10 @@ document.querySelectorAll('input[name="color-mode"]').forEach(radio => {
     });
 });
 
-// --- Events: Tab Navigation ---
+// --- Event Listeners (Tabs & Shapes) ---
 document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.tab-btn, .tab-content').forEach(el => el.classList.remove('active'));
         btn.classList.add('active');
         document.getElementById(`content-${btn.getAttribute('data-tab')}`).classList.add('active');
     });
@@ -123,19 +191,16 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 
 document.querySelectorAll('.sub-tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-        document.querySelectorAll('.sub-tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.shape-panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.sub-tab-btn, .shape-panel').forEach(el => el.classList.remove('active'));
         btn.classList.add('active');
         document.getElementById(`panel-${btn.getAttribute('data-sub')}`).classList.add('active');
     });
 });
 
-// --- Events: Shapes & Scannability ---
 document.querySelectorAll('.shape-card, .scan-card').forEach(card => {
-    card.addEventListener('click', (e) => {
+    card.addEventListener('click', () => {
         card.parentNode.querySelectorAll('.shape-card, .scan-card').forEach(c => c.classList.remove('active'));
         card.classList.add('active');
-
         const val = card.getAttribute('data-val');
         if (card.classList.contains('scan-card')) currentSettings.errorCorrection = val;
         else if (card.getAttribute('data-type') === 'body') currentSettings.bodyShape = val;
@@ -145,7 +210,7 @@ document.querySelectorAll('.shape-card, .scan-card').forEach(card => {
     });
 });
 
-// --- Events: Logo Controls ---
+// --- Event Listeners (Logo Upload with Embedded Base64) ---
 const uploadBox = document.getElementById('upload-box');
 const uploadText = document.getElementById('upload-text');
 const removeLogoBtn = document.getElementById('remove-logo');
@@ -153,100 +218,111 @@ const removeLogoBtn = document.getElementById('remove-logo');
 document.getElementById('logo-input').addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (file) {
-        currentSettings.logoUrl = URL.createObjectURL(file);
-        uploadText.innerText = file.name;
-        uploadBox.classList.add('has-file');
-        removeLogoBtn.style.display = 'block';
-        updateLivePreview();
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            currentSettings.logoUrl = event.target.result;
+            uploadText.innerText = file.name;
+            uploadBox.classList.add('has-file');
+            removeLogoBtn.style.display = 'block';
+            updateLivePreview();
+        };
+        reader.readAsDataURL(file);
     }
 });
 
 removeLogoBtn.addEventListener('click', (e) => {
-    e.stopPropagation(); // Prevents file dialog from opening
+    e.stopPropagation();
     currentSettings.logoUrl = "";
     document.getElementById('logo-input').value = "";
-    uploadText.innerText = "Upload Custom Logo (PNG, JPEG)";
+    uploadText.innerText = "Upload Custom Logo";
     uploadBox.classList.remove('has-file');
     removeLogoBtn.style.display = 'none';
     updateLivePreview();
 });
 
-document.querySelectorAll('.social-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        currentSettings.logoUrl = btn.getAttribute('data-url');
-        uploadText.innerText = "Social Icon Selected";
-        uploadBox.classList.add('has-file');
-        removeLogoBtn.style.display = 'block';
-        updateLivePreview();
-    });
+document.getElementById('logo-size').addEventListener('input', (e) => { 
+    currentSettings.logoSize = parseFloat(e.target.value); 
+    updateLivePreview(); 
 });
 
-document.getElementById('logo-size').addEventListener('input', (e) => { currentSettings.logoSize = parseFloat(e.target.value); updateLivePreview(); });
-document.getElementById('logo-bg-toggle').addEventListener('change', (e) => { currentSettings.hideBgDots = e.target.checked; updateLivePreview(); });
+document.getElementById('logo-bg-toggle').addEventListener('change', (e) => { 
+    currentSettings.hideBgDots = e.target.checked; 
+    updateLivePreview(); 
+});
 
-// --- Events: Download ---
-// downloadBtn.addEventListener('click', () => {
-//     const ext = document.getElementById('dl-format').value;
-//     const size = parseInt(document.getElementById('dl-size').value);
-    
-//     // Temporarily resize up to high-res for the download
-//     qrCode.update({ width: size, height: size });
-    
-//     qrCode.download({ name: "qr-code", extension: ext }).then(() => {
-//         // Revert back to UI preview size after download finishes
-//         qrCode.update({ width: 250, height: 250 });
-//     });
-// });
+// --- Event Listener (Margin Selector) ---
+document.getElementById('dl-margin').addEventListener('change', (e) => {
+    currentSettings.margin = parseInt(e.target.value, 10);
+    updateLivePreview();
+});
 
-// --- Events: Advanced Bug-Free Download ---
+// --- High-Resolution Vector & Raster Download Engine ---
 downloadBtn.addEventListener('click', () => {
     const ext = document.getElementById('dl-format').value;
-    const size = parseInt(document.getElementById('dl-size').value);
+    const size = parseInt(document.getElementById('dl-size').value, 10);
     
-    // Temporarily resize up to high-res and FORCE svg mode
-    qrCode.update({ width: size, height: size, type: "svg" });
+    const originalSvg = document.querySelector('#qr-result svg');
+    if (!originalSvg) return;
     
-    // Give the DOM 150ms to redraw the larger SVG before capturing it
-    setTimeout(() => {
-        if (ext === "svg") {
-            // For SVG, the library's native downloader works perfectly
-            qrCode.download({ name: "clean-qrcode", extension: "svg" })
-                  .then(() => qrCode.update({ width: 250, height: 250 }));
-        } else {
-            // For PNG/JPEG, bypass the library and use native browser rendering
-            const svgElement = document.querySelector('#qr-result svg');
-            const xml = new XMLSerializer().serializeToString(svgElement);
-            
-            // Convert SVG to Base64
-            const svg64 = btoa(unescape(encodeURIComponent(xml)));
-            const image64 = 'data:image/svg+xml;base64,' + svg64;
+    // Clone to prevent modifying the live preview layout
+    const svgClone = originalSvg.cloneNode(true);
+    
+    // Ensure standard SVG XML namespaces are present for standalone vector file compatibility
+    if (!svgClone.getAttribute('xmlns')) {
+        svgClone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    }
+    if (!svgClone.getAttribute('xmlns:xlink')) {
+        svgClone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+    }
 
-            const img = new Image();
-            img.onload = function() {
-                const canvas = document.createElement("canvas");
-                canvas.width = size;
-                canvas.height = size;
-                const ctx = canvas.getContext("2d");
-                
-                // If JPEG, fill a white background first so it isn't transparent (black)
-                if (ext === "jpeg") {
-                    ctx.fillStyle = currentSettings.bgColor || "#ffffff";
-                    ctx.fillRect(0, 0, size, size);
-                }
-                
-                // Draw the flawless SVG onto the canvas
-                ctx.drawImage(img, 0, 0, size, size);
-                
-                // Trigger native browser download
-                const a = document.createElement("a");
-                a.download = `clean-qrcode.${ext}`;
-                a.href = canvas.toDataURL(`image/${ext}`);
-                a.click();
-                
-                // Revert back to UI preview size
-                qrCode.update({ width: 250, height: 250 });
-            };
-            img.src = image64;
-        }
-    }, 150);
+    // Set target high-res dimensions
+    svgClone.setAttribute('width', size);
+    svgClone.setAttribute('height', size);
+    
+    // Apply extra-rounded eye styling and tight-fit viewBox to the clone
+    applyExtraRoundedInnerEye(svgClone);
+    fitSvgViewBox(svgClone);
+    
+    const xml = new XMLSerializer().serializeToString(svgClone);
+    const svgBlob = new Blob([xml], { type: 'image/svg+xml;charset=utf-8' });
+    const blobUrl = URL.createObjectURL(svgBlob);
+
+    if (ext === "svg") {
+        const a = document.createElement("a");
+        a.download = "custom-qr.svg";
+        a.href = blobUrl;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+    } else {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext("2d");
+            
+            // Fill solid background for JPEG (which does not support alpha channel)
+            if (ext === "jpeg") {
+                ctx.fillStyle = currentSettings.bgColor || "#ffffff";
+                ctx.fillRect(0, 0, size, size);
+            }
+            
+            ctx.drawImage(img, 0, 0, size, size);
+            URL.revokeObjectURL(blobUrl);
+            
+            const a = document.createElement("a");
+            a.download = `custom-qr.${ext}`;
+            a.href = canvas.toDataURL(ext === 'jpeg' ? 'image/jpeg' : 'image/png', 0.95);
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        };
+        img.onerror = () => {
+            URL.revokeObjectURL(blobUrl);
+            console.error("Failed to render QR Code image for export.");
+        };
+        img.src = blobUrl;
+    }
 });
