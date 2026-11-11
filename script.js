@@ -11,8 +11,7 @@ let currentSettings = {
     logoUrl: "",
     logoSize: 0.3,
     hideBgDots: true,
-    margin: 0 // Default: 0 for full edge-to-edge bleed
-    margin: 5 // Default 5px margin
+    margin: 5 // Default margin
 };
 
 const qrResult = document.getElementById('qr-result');
@@ -254,12 +253,6 @@ document.getElementById('logo-size').addEventListener('input', (e) => {
 document.getElementById('logo-bg-toggle').addEventListener('change', (e) => { 
     currentSettings.hideBgDots = e.target.checked; 
     updateLivePreview(); 
-});
-
-// --- Event Listener (Margin Selector) ---
-document.getElementById('dl-margin').addEventListener('change', (e) => {
-    currentSettings.margin = parseInt(e.target.value, 10);
-    updateLivePreview();
 });
 
 // --- High-Resolution Vector & Raster Download Engine ---
