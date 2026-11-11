@@ -45,8 +45,7 @@ function applyExtraRoundedInnerEye(targetSvg) {
     }
 }
 
-// --- Fit SVG ViewBox Tight to QR Bounds (Stretches edge-to-edge) ---
-// --- Fit SVG ViewBox Tight to QR Bounds (with neat 5px margin) ---
+// --- Fit SVG ViewBox to Exact Margin Matching Reference QR (2.85% margin / 28.5px on 1000px) ---
 function fitSvgViewBox(targetSvg) {
     const svg = targetSvg || document.querySelector('#qr-result svg');
     if (!svg || !qrCode._qr) return;
@@ -55,16 +54,23 @@ function fitSvgViewBox(targetSvg) {
     const a = Math.floor(250 / n);
     const matrixSize = n * a;
     const offset = Math.floor((250 - matrixSize) / 2);
-    const m = currentSettings.margin; // 5px default
     
-    if (currentSettings.margin === 0) {
-        // Tight-fit viewBox directly to the QR pattern bounds so it stretches 100% to the edges
-        svg.setAttribute('viewBox', `${offset} ${offset} ${matrixSize} ${matrixSize}`);
-    } else {
-        const m = currentSettings.margin;
-        svg.setAttribute('viewBox', `${offset - m} ${offset - m} ${matrixSize + 2 * m} ${matrixSize + 2 * m}`);
-    }
-    svg.setAttribute('viewBox', `${offset - m} ${offset - m} ${matrixSize + 2 * m} ${matrixSize + 2 * m}`);
+    // Exactly matches the reference image: 28.5px margin on a 1000px image (2.85% margin, 94.3% matrix)
+    const m = matrixSize * (28.5 / 943);
+    const vbX = offset - m;
+    const vbY = offset - m;
+    const vbSize = matrixSize + 2 * m;
+    
+    svg.setAttribute('viewBox', `${vbX.toFixed(2)} ${vbY.toFixed(2)} ${vbSize.toFixed(2)} ${vbSize.toFixed(2)}`);
+    
+    // Ensure the background elements cover the entire visible area
+    const bgElements = svg.querySelectorAll('clipPath[id*="background-color"] rect, rect[clip-path*="background-color"]');
+    bgElements.forEach(bg => {
+        bg.setAttribute('x', vbX.toFixed(2));
+        bg.setAttribute('y', vbY.toFixed(2));
+        bg.setAttribute('width', vbSize.toFixed(2));
+        bg.setAttribute('height', vbSize.toFixed(2));
+    });
 }
 
 // Hook into the library's native lifecycle extension to guarantee execution
@@ -303,8 +309,8 @@ downloadBtn.addEventListener('click', () => {
             canvas.height = size;
             const ctx = canvas.getContext("2d");
             
-            // Fill solid background for JPEG (which does not support alpha channel)
-            if (ext === "jpeg") {
+            // Fill solid background for JPEG or if bgColor is defined
+            if (ext === "jpeg" || currentSettings.bgColor) {
                 ctx.fillStyle = currentSettings.bgColor || "#ffffff";
                 ctx.fillRect(0, 0, size, size);
             }
